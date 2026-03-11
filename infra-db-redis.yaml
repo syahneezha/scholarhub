@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scholarhub
+
+---
+# --- REDIS DEPLOYMENT ---
+# Sesuai : Digunakan untuk Rate Limiting & Auth Token Blacklist
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: scholarhub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+        # Command agar Redis berjalan persistent (optional tapi recommended)
+        command: ["redis-server", "--appendonly", "yes"]
+
+---
+# --- REDIS SERVICE ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: scholarhub
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# --- MARIADB DEPLOYMENT ---
+# Sesuai & : Wajib InnoDB & utf8mb4
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: scholarhub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:10.11
+        ports:
+        - containerPort: 3306
+        env:
+        # PENTING: Password root ini nanti HARUS diganti/di-manage Vault
+        # Untuk tahap awal setup, kita set hardcoded dulu agar pod bisa jalan
+        - name: MARIADB_ROOT_PASSWORD
+          value: "scholarhub_initial_root_pass" 
+        - name: MARIADB_DATABASE
+          value: "scholarhub"
+        # Konfigurasi Command Line untuk memaksa UTF8MB4 & InnoDB
+        args:
+          - "--character-set-server=utf8mb4"
+          - "--collation-server=utf8mb4_unicode_ci"
+          - "--default-storage-engine=innodb"
+          - "--innodb-file-per-table=1"
+
+---
+# --- MARIADB SERVICE ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: scholarhub
+spec:
+  selector:
+    app: mariadb
+  ports:
+  - port: 3306
+    targetPort: 3306

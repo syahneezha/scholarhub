@@ -1,0 +1,11 @@
+Django>=5.0
+djangorestframework
+hvac>=1.2.1
+mysqlclient
+redis
+gunicorn
+bleach
+argon2-cffi
+requests
+djangorestframework==3.15.1
+djangorestframework-simplejwt==5.3.1
