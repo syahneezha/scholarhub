@@ -57,3 +57,28 @@ class CustomLoginView(TokenObtainPairView):
                 user=None, action="LOGIN_FAILED", ip_address=ip, details=f"Gagal login untuk: {username}"
             )
             raise e
+        
+
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.permissions import IsAuthenticated
+
+@api_view(['PUT']) # Gunakan PUT untuk update data
+@permission_classes([IsAuthenticated]) # Hanya user login yang bisa update
+@parser_classes([MultiPartParser, FormParser]) # Wajib ada ini agar API bisa menerima file (gambar)
+def update_profile_picture(request):
+    user = request.user
+
+    # Cek apakah ada file yang dikirim dengan nama 'profile_picture'
+    if 'profile_picture' not in request.FILES:
+        return Response({'error': 'Tidak ada gambar yang diupload.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Simpan gambar ke database
+    user.profile_picture = request.FILES['profile_picture']
+    user.save()
+
+    # Kembalikan URL gambar yang baru
+    return Response({
+        'message': 'Foto profil berhasil diperbarui!',
+        'profile_picture_url': request.build_absolute_uri(user.profile_picture.url)
+    }, status=status.HTTP_200_OK)

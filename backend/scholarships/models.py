@@ -12,21 +12,21 @@ class Category(models.Model):
         return self.name
 
 # 2. TABEL BEASISWA (Pusat Data Utama)
+# 2. TABEL BEASISWA (Pusat Data Utama)
 class Scholarship(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
-    provider = models.CharField(max_length=255) # Nama instansi/kampus pemberi
+    provider = models.CharField(max_length=255) 
     description = models.TextField()
     
-    # Relasi ke Tabel Kategori (Jika kategori dihapus, beasiswanya tidak ikut terhapus, hanya kosong/null)
+    # --- TAMBAHKAN BARIS INI UNTUK POSTER ---
+    poster = models.ImageField(upload_to='scholarship_posters/', null=True, blank=True)
+    # ----------------------------------------
+    
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='scholarships')
-    
-    quota = models.IntegerField(default=0) # Jumlah penerima
+    quota = models.IntegerField(default=0)
     deadline = models.DateField()
-    
-    # Relasi ke Tabel User (Siapa Admin yang memposting beasiswa ini)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posted_scholarships')
-    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: django
-        image: scholarhub-backend:v6
+        image: scholarhub-backend:v12
         imagePullPolicy: IfNotPresent # PENTING: Gunakan image lokal yg baru kita build
         ports:
         - containerPort: 8000
@@ -24,9 +24,9 @@ spec:
         - name: VAULT_ADDR
           value: "http://vault.scholarhub.svc.cluster.local:8200"
         - name: VAULT_ROLE_ID
-          value: "4c7be204-b773-7486-8cbc-dc4c6dea263d"  # <--- MASUKKAN ROLE ID DISINI
+          value: "8d7a2cbc-0e01-6e70-43b4-7a27361f1c6a"  # <--- MASUKKAN ROLE ID DISINI
         - name: VAULT_SECRET_ID
-          value: "080a152c-44d8-bcba-2841-78584283de0d" # <--- MASUKKAN SECRET ID DISINI
+          value: "bc04f4f5-4431-be69-179f-4f97f23d84ea" # <--- MASUKKAN SECRET ID DISINI
         
         # --- KONEKSI DATABASE ---
         - name: DB_HOST

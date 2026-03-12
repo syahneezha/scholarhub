@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders', # Tambahan: Untuk CORS di API
     'rest_framework',
     'users',
     'rest_framework_simplejwt',
@@ -79,6 +80,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # Tambahan: Middleware CORS
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -201,3 +203,10 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,                      # Token dilindungi oleh kunci Vault
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Pengaturan untuk Upload File / Gambar
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Mengizinkan semua Frontend (localhost port berapapun) untuk mengambil data
+CORS_ALLOW_ALL_ORIGINS = True
