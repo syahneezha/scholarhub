@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions
+from rest_framework.response import Response  # Tambahkan ini
+from rest_framework import status             # Dan inifrom rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from .models import Category, Scholarship, Bookmark
 from .serializers import CategorySerializer, ScholarshipSerializer, BookmarkSerializer
@@ -27,17 +28,31 @@ class ScholarshipViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
-# 4. LOGIKA BOOKMARK (Simpan Beasiswa)
+# scholarships/views.py
+
 class BookmarkViewSet(viewsets.ModelViewSet):
     serializer_class = BookmarkSerializer
-    permission_classes = [permissions.IsAuthenticated] # Harus login
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Mahasiswa hanya bisa melihat bookmark miliknya sendiri
     def get_queryset(self):
         return Bookmark.objects.filter(user=self.request.user)
 
-    # Hanya Applicant yang boleh nge-bookmark, Admin tidak boleh
+    def create(self, request, *args, **kwargs):
+        # 1. Ambil ID beasiswa dari request
+        scholarship_id = request.data.get('scholarship')
+        
+        # 2. Cek apakah user ini sudah pernah simpan beasiswa ini?
+        exists = Bookmark.objects.filter(user=request.user, scholarship_id=scholarship_id).exists()
+        
+        if exists:
+            # Jika sudah ada, kirim pesan ramah, jangan ERROR 500
+            return Response(
+                {"detail": "Beasiswa ini sudah ada di daftar simpanan kamu!"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # 3. Jika belum ada, jalankan proses simpan seperti biasa
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
-        if self.request.user.role != 'applicant':
-            raise PermissionDenied("Hanya mahasiswa (applicant) yang bisa menyimpan beasiswa.")
         serializer.save(user=self.request.user)

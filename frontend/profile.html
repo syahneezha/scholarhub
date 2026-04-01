@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarHub - My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .bg-navy { background-color: #1e293b; }
+        .text-navy { color: #1e293b; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] font-sans text-slate-900 min-h-screen">
+
+    <nav class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2 text-navy">
+            <h1 class="text-2xl font-extrabold tracking-tight">ScholarHub</h1>
+        </div>
+        <div class="hidden md:flex space-x-6 items-center font-medium text-slate-600 text-sm">
+            <a href="index.html" class="hover:text-navy transition">Home</a>
+            <a href="dashboard.html" class="hover:text-navy transition">Scholarships</a>
+            <a href="profile.html" class="text-navy font-bold">My Profile</a>
+            <button onclick="logout()" class="hover:text-red-600 transition font-bold text-red-500">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto py-10 px-4">
+        
+        <div class="mb-10 text-center md:text-left">
+            <h2 class="text-3xl font-bold text-navy mb-2">My Profile</h2>
+            <p class="text-slate-500">Manage your account information.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
+            <h3 class="font-bold text-lg text-navy mb-6"><i class="fas fa-user-circle mr-2"></i>Personal Info</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username / Name</label>
+                    <input type="text" id="profileName" class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-4 py-3 outline-none focus:border-navy focus:bg-white transition text-sm" placeholder="Loading...">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                    <input type="email" id="profileEmail" class="w-full bg-slate-50 border border-slate-200 text-slate-400 rounded-xl px-4 py-3 outline-none text-sm" disabled>
+                    <p class="text-[10px] text-slate-400 mt-1">Email is managed by system.</p>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <button onclick="updateName()" class="bg-navy text-white px-8 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-200">
+                    Update Name
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
+            <h3 class="font-bold text-lg text-navy mb-6"><i class="fas fa-bookmark mr-2 text-yellow-500"></i>Saved Scholarships</h3>
+            <div id="saved-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p class="text-sm text-slate-400">Loading your bookmarks...</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
+            <h3 class="font-bold text-lg text-navy mb-6"><i class="fas fa-lock mr-2 text-red-400"></i>Change Password</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="password" id="newPassword" placeholder="New Password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-navy">
+                <input type="password" id="confirmPassword" placeholder="Confirm New Password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-navy">
+            </div>
+            <button onclick="changePassword()" class="mt-6 border-2 border-navy text-navy px-8 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition">
+                Change Password
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+    const token = localStorage.getItem('access_token');
+
+    // 1. FUNGSI LOGOUT
+    function logout() {
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+
+    // 2. LOAD DATA PROFIL OTOMATIS
+    async function fetchProfile() {
+        try {
+            const response = await fetch('http://localhost:8000/api/users/me/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('profileName').value = data.username;
+                document.getElementById('profileEmail').value = data.email;
+                localStorage.setItem('username', data.username);
+            }
+        } catch (err) {
+            console.error("Gagal load profil");
+        }
+    }
+
+    // 3. FUNGSI UPDATE NAME
+    async function updateName() {
+        const newName = document.getElementById('profileName').value;
+        try {
+            const response = await fetch('http://localhost:8000/api/users/update/', {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: newName })
+            });
+
+            if (response.ok) {
+                alert("Nama berhasil diperbarui!");
+                localStorage.setItem('username', newName);
+                location.reload();
+            } else {
+                alert("Gagal memperbarui nama.");
+            }
+        } catch (err) {
+            alert("Error koneksi!");
+        }
+    }
+
+    // 4. FUNGSI CHANGE PASSWORD
+    async function changePassword() {
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+
+        if (!newPass || !confirmPass) {
+            alert("Harap isi password baru!");
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            alert("Password baru dan konfirmasi tidak cocok!");
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:8000/api/users/change-password/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ new_password: newPass })
+            });
+
+            if (response.ok) {
+                alert("Password berhasil diganti! Silakan login ulang.");
+                logout();
+            } else {
+                const err = await response.json();
+                alert("Gagal: " + (err.error || "Terjadi kesalahan"));
+            }
+        } catch (err) {
+            alert("Error koneksi!");
+        }
+    }
+
+    // 5. LOAD BOOKMARKS
+    async function fetchSavedScholarships() {
+        const savedList = document.getElementById('saved-list');
+        try {
+            const response = await fetch('http://localhost:8000/api/bookmarks/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            savedList.innerHTML = ''; 
+
+            if (data.length === 0) {
+                savedList.innerHTML = '<p class="text-sm text-slate-400 col-span-full">No bookmarks yet.</p>';
+                return;
+            }
+
+            data.forEach(item => {
+                savedList.innerHTML += `
+                    <div class="p-4 bg-white rounded-xl border border-slate-100 flex justify-between items-center hover:shadow-md transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-navy">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-navy text-sm">${item.scholarship_title}</h4>
+                                <p class="text-[10px] text-slate-400 uppercase">Saved in MariaDB</p>
+                            </div>
+                        </div>
+                        <a href="detail.html?id=${item.scholarship}" class="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition">View</a>
+                    </div>
+                `;
+            });
+        } catch (err) {
+            savedList.innerHTML = '<p class="text-red-500 text-xs">Error fetching bookmarks.</p>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!token) { window.location.href = 'login.html'; return; }
+        fetchProfile();
+        fetchSavedScholarships();
+    });
+</script>
+
+</body>
+</html>

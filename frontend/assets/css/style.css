@@ -83,3 +83,52 @@ body { background-color: #f8f9fc; font-family: 'Poppins', sans-serif; }
 .custom-card {
     background-color: #ffffff;
 }
+
+/* --- HALAMAN AUTENTIKASI (LOGIN & REGISTER) --- */
+.auth-bg {
+    background: #f8f9fc;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+.auth-card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+.auth-left {
+    background: linear-gradient(135deg, #0056ff 0%, #7b2cbf 100%);
+    color: white;
+    padding: 60px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.auth-right {
+    padding: 60px 50px;
+    background: white;
+}
+.form-control-custom {
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+}
+.form-control-custom:focus {
+    border-color: #7b2cbf;
+    box-shadow: 0 0 0 0.25rem rgba(123, 44, 191, 0.15);
+}
+.btn-auth {
+    background-color: #7b2cbf;
+    color: white;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 600;
+    border: none;
+    transition: background-color 0.3s;
+}
+.btn-auth:hover {
+    background-color: #5a189a;
+    color: white;
+}

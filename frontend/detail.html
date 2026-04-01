@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarHub - Scholarship Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .bg-navy { background-color: #1e293b; }
+        .text-navy { color: #1e293b; }
+        .border-navy { border-color: #1e293b; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] font-sans text-slate-900 min-h-screen">
+
+    <nav class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2 text-navy">
+            <h1 class="text-2xl font-extrabold tracking-tight">ScholarHub</h1>
+        </div>
+        <div class="hidden md:flex space-x-6 items-center font-medium text-slate-600 text-sm">
+            <a href="index.html" class="hover:text-navy transition">Home</a>
+            <a href="dashboard.html" class="hover:text-navy transition">Scholarships</a>
+            <a href="dashboard.html" class="hover:text-navy transition">Dashboard</a>
+            <a href="profile.html" class="hover:text-navy transition">My Profile</a>
+            <button onclick="logout()" class="hover:text-red-600 transition">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto py-10 px-4">
+        <div class="mb-6">
+            <p class="text-xs text-slate-500 mb-2">Scholarships / <span class="text-slate-700 font-medium">Detail</span></p>
+            <h2 class="text-3xl font-bold text-navy">Scholarship Information</h2>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <div class="lg:w-2/3 space-y-6">
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-6">
+                    <div class="w-full h-72 bg-slate-200 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
+                        <img id="detail-image" src="https://via.placeholder.com/800x400?text=No+Image" class="w-full h-full object-cover">
+                    </div>
+                    
+                    <h1 id="detail-title" class="text-2xl font-bold text-navy mb-3">Loading Title...</h1>
+                    
+                    <div id="detail-badges" class="flex flex-wrap gap-2 mb-4">
+                        </div>
+
+                    <p id="detail-description" class="text-slate-600 text-sm leading-relaxed">
+                        Loading description...
+                    </p>
+                </div>
+            </div>
+
+            <div class="lg:w-1/3">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sticky top-24">
+                    <h3 class="font-bold text-navy text-lg mb-2">Ready to Apply?</h3>
+                    <p class="text-sm text-slate-500 mb-6">Provider: <span id="detail-provider" class="font-bold">-</span></p>
+                    
+                    <button class="w-full bg-navy text-white px-5 py-3 rounded-xl text-sm font-bold shadow-md hover:bg-slate-800 transition mb-3">
+                        Apply Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 1. Ambil ID dari URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const scholarshipId = urlParams.get('id');
+            const token = localStorage.getItem('access_token');
+
+            if (!scholarshipId) {
+                alert("ID tidak valid!");
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            try {
+                // 2. Fetch ke Backend Kubernetes
+                const response = await fetch(`http://localhost:8000/api/scholarships/${scholarshipId}/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error("Gagal ambil data");
+
+                const s = await response.json();
+
+                // 3. Masukkan ke HTML
+                document.getElementById('detail-title').innerText = s.title;
+                document.getElementById('detail-description').innerText = s.description || "No description provided.";
+                document.getElementById('detail-provider').innerText = s.provider;
+                
+                // Badges
+                const badgeBox = document.getElementById('detail-badges');
+                badgeBox.innerHTML = `
+                    <span class="bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full">${s.provider}</span>
+                    <span class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full">Cybersecurity</span>
+                    <span class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full">Deadline: ${s.deadline}</span>
+                `;
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('detail-title').innerText = "Scholarship Not Found";
+            }
+        });
+    </script>
+</body>
+</html>

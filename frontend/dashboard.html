@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScholarHub - Browse Scholarships</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .bg-navy { background-color: #1e293b; }
+        .text-navy { color: #1e293b; }
+    </style>
+</head>
+<body class="bg-[#f8fafc] font-sans text-slate-900 min-h-screen">
+
+    <nav class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2 text-navy">
+            <h1 class="text-2xl font-extrabold tracking-tight">ScholarHub</h1>
+        </div>
+        <div class="hidden md:flex space-x-6 items-center font-medium text-slate-600 text-sm">
+            <a href="index.html" class="hover:text-navy transition">Home</a>
+            <a href="dashboard.html" class="text-navy font-bold">Scholarships</a>
+            <a href="profile.html" class="hover:text-navy transition">My Profile</a>
+            
+            <button onclick="logout()" class="hover:text-red-600 transition font-bold text-red-500">Logout</button>
+            
+            <div class="flex items-center gap-3 ml-4">
+                <span class="bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div> Status: Logged In
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto py-10 px-4">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-navy mb-2">Browse Scholarships</h2>
+            <p class="text-slate-500">Menampilkan data beasiswa terbaru langsung dari server Kubernetes.</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-10">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Search Scholarship</label>
+            <input type="text" id="search-input" placeholder="Search by scholarship name..." class="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-navy text-sm mb-2">
+            <p id="scholarship-count" class="text-xs text-slate-400">Loading scholarships...</p>
+        </div>
+
+        <div id="scholarship-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="col-span-full text-center py-20 text-slate-400">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Menghubungkan ke Backend Kubernetes...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+
+        // 1. FUNGSI LOGOUT
+        function logout() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            alert("Berhasil keluar!");
+            window.location.href = 'login.html';
+        }
+
+        // 2. FUNGSI SAVE (BOOKMARK)
+        async function saveScholarship(id) {
+            const saveBtn = document.getElementById(`save-btn-${id}`);
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/bookmarks/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ scholarship: id })
+                });
+
+                if (response.ok) {
+                    alert("Berhasil disimpan!");
+                    saveBtn.innerText = "Saved";
+                    saveBtn.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+                    saveBtn.disabled = true;
+                } else {
+                    const err = await response.json();
+                    alert("Gagal: " + (err.detail || "Hanya role applicant yang bisa simpan atau sudah pernah disimpan."));
+                }
+            } catch (e) {
+                alert("Koneksi gagal! Pastikan port-forward aktif.");
+            }
+        }
+
+        // 3. FUNGSI TAMPILKAN DATA (FETCH)
+        async function fetchScholarships() {
+            const scholarshipList = document.getElementById('scholarship-list');
+            const countLabel = document.getElementById('scholarship-count');
+
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/api/scholarships/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Unauthorized');
+
+                const data = await response.json();
+                scholarshipList.innerHTML = '';
+                countLabel.innerText = `${data.length} scholarships found`;
+
+                data.forEach(s => {
+                    // Logika Gambar: Pakai poster dari database jika ada, jika tidak pakai icon topi
+                    const posterHtml = s.poster 
+                        ? `<img src="${s.poster}" class="w-full h-full object-cover">`
+                        : `<i class="fas fa-graduation-cap fa-3x text-slate-400"></i>`;
+
+                    scholarshipList.innerHTML += `
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+                            <div class="h-48 bg-slate-200 flex items-center justify-center overflow-hidden">
+                                ${posterHtml}
+                            </div>
+                            <div class="p-6">
+                                <span class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full mb-3 inline-block">
+                                    ${s.category_name || 'Cybersecurity'}
+                                </span>
+                                <h3 class="text-xl font-bold text-navy mb-4">${s.title}</h3>
+                                <div class="space-y-2 text-sm text-slate-700 mb-6">
+                                    <p><span class="font-bold">Provider:</span> ${s.provider}</p>
+                                    <p><span class="font-bold">Deadline:</span> <span class="text-red-500">${s.deadline}</span></p>
+                                </div>
+                                <div class="flex gap-3">
+                                    <a href="detail.html?id=${s.id}" class="bg-navy text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition">View Details</a>
+                                    
+                                    <button id="save-btn-${s.id}" onclick="saveScholarship('${s.id}')" class="border border-slate-300 text-slate-600 px-5 py-2 rounded-xl text-sm font-bold hover:bg-slate-50 transition">
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+                scholarshipList.innerHTML = `<p class="col-span-full text-center text-red-500">Gagal terhubung ke Backend!</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchScholarships);
+    </script>
+</body>
+</html>
